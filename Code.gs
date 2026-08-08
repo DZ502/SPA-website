@@ -1,0 +1,6 @@
+const SHEET_NAME="Afspraken";
+const ADMIN_CODE="1216";
+function sheet_(){const s=SpreadsheetApp.getActive().getSheetByName(SHEET_NAME)||SpreadsheetApp.getActive().insertSheet(SHEET_NAME);if(s.getLastRow()===0)s.appendRow(["ID","Naam","Behandeling","Datum","Tijd","Status","Aangemaakt"]);return s}
+function doPost(e){const p=e.parameter||{},s=sheet_();if(p.action==="add"){s.appendRow([String(Date.now()),p.name||"",p.service||"",p.date||"",p.time||"","Aangevraagd",new Date()]);return out_({ok:true})}if(p.action==="approve"&&p.code===ADMIN_CODE){const r=s.getDataRange().getValues();for(let i=1;i<r.length;i++)if(String(r[i][0])===String(p.id)){s.getRange(i+1,6).setValue("Goedgekeurd");return out_({ok:true})}}return out_({ok:false})}
+function doGet(e){const p=e.parameter||{};if(p.action!=="list"||p.code!==ADMIN_CODE)return out_({ok:false});const r=sheet_().getDataRange().getValues();return out_({ok:true,appointments:r.slice(1).filter(x=>x[0]).map(x=>({id:String(x[0]),name:String(x[1]),service:String(x[2]),date:String(x[3]),time:String(x[4]),status:String(x[5])}))})}
+function out_(x){return ContentService.createTextOutput(JSON.stringify(x)).setMimeType(ContentService.MimeType.JSON)}
