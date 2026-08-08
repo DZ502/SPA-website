@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="nl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>SPA — Afspraken</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#f5f0ea;color:#342c27}
+header{padding:42px 20px;text-align:center;background:#d9c7b7}
+h1{margin:0;font-size:48px;letter-spacing:8px}header p{margin:10px 0 0}
+main{max-width:760px;margin:28px auto;padding:0 18px}.card{background:white;border-radius:18px;padding:24px;margin-bottom:18px;box-shadow:0 6px 20px #00000012}
+label{display:block;margin:14px 0 6px;font-weight:bold}input,select,button{width:100%;padding:12px;border:1px solid #cfc5bd;border-radius:10px;font-size:16px}
+button{margin-top:18px;background:#6f5b4d;color:white;border:0;cursor:pointer}button:hover{opacity:.9}
+.hidden{display:none}.msg{margin-top:14px;padding:12px;border-radius:10px;background:#eee5dc}.appt{padding:12px;border:1px solid #ddd0c5;border-radius:10px;margin:10px 0}.small{font-size:13px;color:#6d625b}
+</style>
+</head>
+<body>
+<header><h1>SPA</h1><p>Online afspraken • Doha &amp; Zoubayr</p></header>
+<main>
+<div class="card" id="login">
+<h2>Toegang</h2><p>Deze pagina is alleen voor mensen die de code hebben.</p>
+<input id="code" inputmode="numeric" placeholder="Toegangscode">
+<button onclick="unlock()">Binnenkomen</button>
+<div id="loginmsg"></div>
+</div>
+
+<div class="card hidden" id="booking">
+<h2>Afspraak aanvragen</h2>
+<label>Naam</label><input id="name" placeholder="Jouw naam">
+<label>Behandeling</label>
+<select id="service"><option>Massage</option><option>Gezichtsbehandeling</option><option>Sauna</option><option>Spa-arrangement</option></select>
+<label>Datum</label><input id="date" type="date">
+<label>Tijd</label><input id="time" type="time">
+<button onclick="requestAppointment()">Afspraak aanvragen</button>
+<div id="requestmsg"></div>
+</div>
+
+<div class="card hidden" id="admin">
+<h2>Beheer — Doha &amp; Zoubayr</h2>
+<p class="small">Hier kun je aanvragen voor het rollenspel bekijken en goedkeuren.</p>
+<div id="list"></div>
+<button onclick="clearAll()">Alle afspraken wissen</button>
+</div>
+</main>
+<script>
+const KEY="spa_appointments";
+function unlock(){
+ if(document.getElementById("code").value==="1216"){
+   login.classList.add("hidden"); booking.classList.remove("hidden"); admin.classList.remove("hidden"); render();
+ } else loginmsg.innerHTML='<div class="msg">Verkeerde code.</div>';
+}
+function requestAppointment(){
+ const n=name.value.trim();
+ if(!n||!date.value||!time.value){requestmsg.innerHTML='<div class="msg">Vul alles in.</div>';return}
+ const a={id:Date.now(),name:n,service:service.value,date:date.value,time:time.value,status:"Aangevraagd"};
+ const arr=JSON.parse(localStorage.getItem(KEY)||"[]");arr.push(a);localStorage.setItem(KEY,JSON.stringify(arr));
+ requestmsg.innerHTML='<div class="msg">Aanvraag ontvangen! Doha & Zoubayr kunnen hem goedkeuren.</div>';
+ render();
+}
+function render(){
+ const arr=JSON.parse(localStorage.getItem(KEY)||"[]");
+ list.innerHTML=arr.length?arr.map(a=>`<div class="appt"><b>${a.name}</b> — ${a.service}<br>${a.date} om ${a.time}<br>Status: <b>${a.status}</b>${a.status==="Aangevraagd"?`<button onclick="approve(${a.id})">Goedkeuren</button>`:""}</div>`).join(""):"<p>Nog geen afspraken.</p>";
+}
+function approve(id){
+ const arr=JSON.parse(localStorage.getItem(KEY)||"[]").map(a=>a.id===id?{...a,status:"Goedgekeurd"}:a);
+ localStorage.setItem(KEY,JSON.stringify(arr));render();
+}
+function clearAll(){if(confirm("Alle afspraken wissen?")){localStorage.removeItem(KEY);render();}}
+</script>
+</body>
+</html>
